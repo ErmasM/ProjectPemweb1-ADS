@@ -19,6 +19,16 @@
         .btn-back:hover { color: #fff; }
         
         .status-badge { background: #198754; color: #fff; padding: 5px 15px; border-radius: 20px; font-size: 0.9rem; }
+
+        /* Style tambahan untuk komentar agar sama rapinya */
+        .avatar-comment {
+            width: 40px; height: 40px;
+            background: linear-gradient(135deg, #666, #333);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; color: #fff; flex-shrink: 0;
+        }
+        .btn-delete { background:none; border:none; color:#dc3545; font-size:0.8rem; padding:0; margin-left:10px; text-decoration:underline; }
     </style>
   </head>
   <body>
@@ -47,18 +57,37 @@
 
                     <h5 class="fw-bold mt-4 mb-3">Sinopsis Buku</h5>
                     <p class="text-secondary" style="line-height: 1.8;">
-                        {{ $book->body }} <!-- Isi 'body' di database dianggap sinopsis -->
+                        {!! nl2br(e($book->body)) !!}
                     </p>
 
                    <div class="mt-5">
+                       {{-- LOGIKA TOMBOL PINJAM & LOVE --}}
                        @auth
-                           <form action="{{ route('borrow.store') }}" method="POST">
-                               @csrf
-                              <input type="hidden" name="post_id" value="{{ $book->id }}">
-                              <button class="btn btn-primary btn-lg w-100">PINJAM BUKU INI</button>
-                           </form>
+                           {{-- Hapus pengecekan Admin biar kamu bisa tes --}}
+                           
+                           <div class="d-flex gap-2">
+                               {{-- 1. TOMBOL PINJAM (DIPERBAIKI) --}}
+                               <form action="{{ route('borrow.store', $book->id) }}" method="POST" class="flex-grow-1">
+                                   @csrf
+                                   <input type="hidden" name="post_id" value="{{ $book->id }}">
+                                   <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold">PINJAM BUKU INI</button>
+                               </form>
+
+                               {{-- 2. TOMBOL LOVE (BARU) --}}
+                               <form action="{{ route('post.favorite', $book->id) }}" method="POST">
+                                   @csrf
+                                   <button class="btn btn-lg px-4" style="background-color: #2a2a2a; border: 1px solid #444;" title="Favoritkan">
+                                       @if(Auth::user()->favorites->contains($book->id))
+                                           <i class="fa-solid fa-heart text-danger fs-4"></i>
+                                       @else
+                                           <i class="fa-regular fa-heart text-white fs-4"></i>
+                                       @endif
+                                   </button>
+                               </form>
+                           </div>
+
                        @else
-                           <a href="{{ route('login') }}" class="btn btn-warning btn-lg w-100">LOGIN UNTUK PINJAM</a>
+                           <a href="{{ route('login') }}" class="btn btn-warning btn-lg w-100 fw-bold">LOGIN UNTUK PINJAM</a>
                        @endauth
                     </div>
 
@@ -66,26 +95,47 @@
                 <div class="mt-5">
                     <h4 class="fw-bold mb-4">Ulasan Pembaca ({{ count($comments) }})</h4>
                     
-                    {{-- Form Komentar --}}
+                    @auth
                     <form action="{{ route('comments.store') }}" method="POST" class="mb-4">
                         @csrf
+                        {{-- Perhatikan: Pakai $book->id --}}
                         <input type="hidden" name="post_id" value="{{ $book->id }}">
+                        
                         <div class="row g-2">
-                            <div class="col-md-4"><input type="text" name="name" class="form-control bg-dark text-white border-secondary" placeholder="Nama Kamu" required></div>
-                            <div class="col-md-6"><input type="text" name="body" class="form-control bg-dark text-white border-secondary" placeholder="Tulis ulasan singkat..." required></div>
-                            <div class="col-md-2"><button class="btn btn-primary w-100">Kirim</button></div>
+                            <div class="col-md-4">
+                                {{-- Nama Otomatis --}}
+                                <input type="text" name="name" class="form-control bg-dark text-white border-secondary" value="{{ Auth::user()->name }}" readonly>
+                            </div>
+                            <div class="col-md-6">
+                                <input type="text" name="body" class="form-control bg-dark text-white border-secondary" placeholder="Tulis ulasan..." required autocomplete="off">
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-primary w-100">Kirim</button>
+                            </div>
                         </div>
                     </form>
+                    @endauth
 
-                    {{-- List Komentar --}}
                     @foreach($comments as $comment)
                     <div class="d-flex gap-3 mb-3 border-bottom border-secondary pb-3">
-                        <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" style="width: 40px; height: 40px; flex-shrink: 0;">
-                            {{ substr($comment->name, 0, 1) }}
+                        <div class="avatar-comment">
+                            {{ substr($comment->name ?? 'A', 0, 1) }}
                         </div>
-                        <div>
-                            <h6 class="fw-bold mb-0 text-white">{{ $comment->name }}</h6>
+                        <div class="w-100">
+                            <div class="d-flex justify-content-between">
+                                <h6 class="fw-bold mb-0 text-white">{{ $comment->name }}</h6>
+                                <small class="text-secondary">{{ \Carbon\Carbon::parse($comment->created_at)->diffForHumans() }}</small>
+                            </div>
                             <p class="text-secondary mb-0 small">{{ $comment->body }}</p>
+
+                            @auth
+                                @if(Auth::user()->role === 'admin')
+                                <form action="{{ route('comments.destroy', $comment->id) }}" method="POST" onsubmit="return confirm('Hapus?');" class="d-inline">
+                                    @csrf @method('DELETE')
+                                    <button class="btn-delete">Hapus</button>
+                                </form>
+                                @endif
+                            @endauth
                         </div>
                     </div>
                     @endforeach

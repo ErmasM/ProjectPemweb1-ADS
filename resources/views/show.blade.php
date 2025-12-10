@@ -71,6 +71,58 @@
                 {{-- GAMBAR UTAMA --}}
                 <img src="{{ $post->image }}" class="article-img">
                 
+                {{-- FITUR TAMBAHAN: TOMBOL PINJAM & LOVE --}}
+                @auth
+                    @if(Auth::user()->role !== 'admin')
+                    <div class="mb-5 text-center p-4" style="background: #1a1a1a; border-radius: 12px; border: 1px dashed #333;">
+                        
+                        {{-- Cek Kategori: Tombol Pinjam hanya muncul jika kategori BUKU (bukan Artikel) --}}
+                        @php
+                            $isBook = in_array($post->category, ['Koleksi Baru', 'Resensi', 'Koleksi', 'Koleksi Umum']);
+                        @endphp
+
+                        @if($isBook)
+                            <h4 class="fw-bold text-white mb-3">Tertarik membaca buku ini?</h4>
+                        @else
+                            <h4 class="fw-bold text-white mb-3">Suka dengan artikel ini?</h4>
+                        @endif
+                        
+                        {{-- CONTAINER FLEX AGAR TOMBOL SEBELAHAN --}}
+                        <div class="d-flex justify-content-center gap-2">
+                            
+                            {{-- 1. TOMBOL PINJAM (Hanya Muncul di Buku) --}}
+                            @if($isBook)
+                                {{-- PERBAIKAN: Menambahkan parameter $post->id agar tidak error --}}
+                                <form action="{{ route('borrow.store', $post->id) }}" method="POST" class="flex-grow-1" style="max-width: 400px;">
+                                    @csrf
+                                    <input type="hidden" name="post_id" value="{{ $post->id }}">
+                                    <button type="submit" class="btn btn-success btn-lg w-100 rounded-pill fw-bold shadow">
+                                        <i class="fa-solid fa-book-bookmark me-2"></i> AJUKAN PEMINJAMAN
+                                    </button>
+                                </form>
+                            @endif
+
+                            {{-- 2. TOMBOL LOVE (FAVORIT) --}}
+                            <form action="{{ route('post.favorite', $post->id) }}" method="POST">
+                                @csrf
+                                <button class="btn btn-lg rounded-pill px-4" style="background-color: #2a2a2a; border: 1px solid #444;" title="Favoritkan">
+                                    {{-- Cek apakah user sudah like --}}
+                                    @if(Auth::user()->favorites->contains($post->id))
+                                        <i class="fa-solid fa-heart text-danger fs-4"></i>
+                                    @else
+                                        <i class="fa-regular fa-heart text-white fs-4"></i>
+                                    @endif
+                                </button>
+                            </form>
+
+                        </div>
+                        @if($isBook)
+                            <small class="text-secondary mt-2 d-block">*Buku akan masuk ke daftar 'Buku Saya' setelah disetujui admin.</small>
+                        @endif
+                    </div>
+                    @endif
+                @endauth
+
                 {{-- ISI ARTIKEL --}}
                 <div class="content mb-5">
                     {!! nl2br(e($post->body)) !!}
@@ -88,7 +140,12 @@
                         
                         <div class="row g-2 mb-2">
                             <div class="col-md-4">
-                                <input type="text" name="name" class="form-control" placeholder="Nama Kamu" required autocomplete="off">
+                                {{-- LOGIKA NAMA: Jika Login otomatis terisi --}}
+                                @auth
+                                    <input type="text" name="name" class="form-control" value="{{ Auth::user()->name }}" readonly style="background-color: #2a2a2a; color: #aaa; cursor: not-allowed;" title="Nama sesuai akun login">
+                                @else
+                                    <input type="text" name="name" class="form-control" placeholder="Nama Kamu" required autocomplete="off">
+                                @endauth
                             </div>
                             <div class="col-md-8">
                                 <input type="text" name="body" class="form-control" placeholder="Tulis komentar di sini..." required autocomplete="off">
@@ -103,11 +160,9 @@
                     @if(count($comments) > 0)
                         @foreach($comments as $comment)
                         <div class="comment-item">
-                            {{-- Avatar Inisial --}}
                             <div class="avatar-comment">
                                 {{ substr($comment->name, 0, 1) }}
                             </div>
-                            
                             <div class="w-100">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <h6 class="mb-0 fw-bold text-white">{{ $comment->name }}</h6>
@@ -115,15 +170,18 @@
                                         {{ \Carbon\Carbon::parse($comment->created_at)->diffForHumans() }}
                                     </small>
                                 </div>
-                                
                                 <p class="text-secondary mb-1 mt-1 small">{{ $comment->body }}</p>
                                 
-                                {{-- Tombol Delete --}}
-                                <form action="{{ route('comments.destroy', $comment->id) }}" method="POST" onsubmit="return confirm('Yakin mau hapus komen ini?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn-delete">Hapus</button>
-                                </form>
+                                {{-- Tombol Delete (Hanya Admin yang bisa hapus) --}}
+                                @auth
+                                    @if(Auth::user()->role === 'admin')
+                                    <form action="{{ route('comments.destroy', $comment->id) }}" method="POST" onsubmit="return confirm('Yakin mau hapus komen ini?');" class="d-inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn-delete">Hapus (Admin)</button>
+                                    </form>
+                                    @endif
+                                @endauth
                             </div>
                         </div>
                         @endforeach
@@ -132,11 +190,8 @@
                     @endif
 
                 </div>
-                {{-- END KOMENTAR --}}
-
             </div>
         </div>
     </div>
-
   </body>
 </html>

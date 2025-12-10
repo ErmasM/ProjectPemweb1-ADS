@@ -8,63 +8,64 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\BorrowController;
 
 // ==========================================
-// 1. JALUR UNTUK PENGUNJUNG (PUBLIK)
+// 1. HALAMAN PUBLIK (User Biasa)
 // ==========================================
-
-// Halaman Depan (Beranda)
 Route::get('/', [PostController::class, 'index'])->name('home');
-
-// Halaman Baca Berita Lengkap
 Route::get('/post/{id}', [PostController::class, 'show'])->name('posts.show');
-
-// Halaman Kontak
-Route::get('/contact', function () {
-    return view('contact');
-})->name('contact');
-
-// Fitur Komentar (Simpan & Hapus)
-Route::post('/comments', [CommentController::class, 'store'])->name('comments.store');
-Route::delete('/comments/{id}', [CommentController::class, 'destroy'])->name('comments.destroy');
-
-
-// ... (Bagian atas/publik biarkan saja) ...
+Route::get('/contact', function () { return view('contact'); })->name('contact');
 
 // ==========================================
-// 2. JALUR KHUSUS ADMIN (DASHBOARD)
+// 2. AUTHENTICATION (Login & Logout)
 // ==========================================
-// Login & Logout
-Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login'); 
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// Group Dashboard (Harus Login Dulu)
-Route::middleware(['auth'])->prefix('dashboard')->group(function () {
+// ==========================================
+// 3. FITUR USER (Harus Login)
+// ==========================================
+Route::middleware(['auth'])->group(function () {
+    // Fitur Pinjam Buku
+    Route::post('/borrow/{post_id}', [BorrowController::class, 'store'])->name('borrow.store');
+    Route::get('/my-borrowings', [BorrowController::class, 'history'])->name('my.borrowings');
     
-    // Halaman Utama Dashboard
+    // Fitur Komentar
+    Route::post('/comments', [CommentController::class, 'store'])->name('comments.store');
+    Route::delete('/comments/{id}', [CommentController::class, 'destroy'])->name('comments.destroy');
+    
+    // Route untuk Like/Unlike
+    Route::post('/post/{id}/favorite', [PostController::class, 'toggleFavorite'])->name('post.favorite');
+});
+
+// ==========================================
+// 4. ADMIN DASHBOARD (Harus Admin)
+// ==========================================
+Route::middleware(['auth', 'admin'])->prefix('dashboard')->group(function () {
+    // Dashboard Utama
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Kelola Postingan (Buku & Artikel)
-    Route::get('/posts', [DashboardController::class, 'posts'])->name('dashboard.posts');
+    // Kelola Posts (Buku/Artikel)
+    // 1. Route untuk Daftar BUKU
+    Route::get('/books', [DashboardController::class, 'books'])->name('dashboard.books');
+    
+    // 2. Route untuk Daftar ARTIKEL
+    Route::get('/articles', [DashboardController::class, 'articles'])->name('dashboard.articles');
+
+    // 3. CRUD (Create, Edit, Delete) - Tetap sama, dipakai bersama
     Route::get('/posts/create', [DashboardController::class, 'createPost'])->name('dashboard.posts.create');
     Route::post('/posts/store', [DashboardController::class, 'storePost'])->name('dashboard.posts.store');
     Route::get('/posts/{id}/edit', [DashboardController::class, 'editPost'])->name('dashboard.posts.edit');
     Route::put('/posts/{id}', [DashboardController::class, 'updatePost'])->name('dashboard.posts.update');
     Route::delete('/posts/{id}', [DashboardController::class, 'destroyPost'])->name('dashboard.posts.destroy');
-
+    
+    // --- PERBAIKAN DI SINI ---
+    // Nama route diganti jadi 'dashboard.loans' agar sesuai dengan Sidebar
+    Route::get('/borrowings', [DashboardController::class, 'borrowings'])->name('dashboard.loans');
+    
+    // Route untuk update status (Terima/Tolak/Kembali)
+    Route::patch('/borrowings/{id}', [DashboardController::class, 'updateBorrowingStatus'])->name('dashboard.borrowings.update');
+    
     // Kelola Komentar
     Route::get('/comments', [DashboardController::class, 'comments'])->name('dashboard.comments');
     Route::delete('/comments/{id}', [DashboardController::class, 'destroyComment'])->name('dashboard.comments.destroy');
-
-    // JALUR USER (Login Only)
-Route::middleware(['auth'])->group(function () {
-    Route::post('/borrow', [BorrowController::class, 'store'])->name('borrow.store');
-    Route::get('/my-books', [BorrowController::class, 'index'])->name('my.borrowings');
-});
-
-// JALUR ADMIN (Tambahan Dashboard)
-Route::middleware(['auth'])->prefix('dashboard')->group(function () {
-    // ... (route dashboard lain) ...
-    Route::get('/borrowings', [DashboardController::class, 'borrowings'])->name('dashboard.borrowings');
-    Route::patch('/borrowings/{id}', [DashboardController::class, 'updateBorrowingStatus'])->name('dashboard.borrowings.update');
-});
 });

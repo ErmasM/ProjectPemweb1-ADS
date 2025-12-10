@@ -21,6 +21,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role', // Tambahkan ini
     ];
 
     /**
@@ -44,5 +45,11 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    // === TAMBAHAN RELASI FAVORIT (LOVE) ===
+    public function favorites()
+    {
+        return $this->belongsToMany(Post::class, 'favorites');
     }
 }

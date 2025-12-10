@@ -3,34 +3,101 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Post;
-use App\Models\Comment;
-use App\Models\Borrowing; // Model Peminjaman
-use Illuminate\Support\Str;
+// IMPORT MODEL YANG BENAR SESUAI GAMBAR KAMU
+use App\Models\Post;       
+use App\Models\Comment;    
+use App\Models\Borrowing;  // Perhatikan: Pakai 'Borrowing', bukan 'Borrow'
 
 class DashboardController extends Controller
 {
-    // ==========================================
-    // 1. DASHBOARD UTAMA
-    // ==========================================
+    // 1. Halaman Dashboard Utama
     public function index()
     {
         return view('dashboard.index', [
-            'total_posts' => Post::count(),
-            'total_comments' => Comment::count(),
-            // Hitung peminjaman yang masih pending (menunggu persetujuan)
-            'pending_borrowings' => Borrowing::where('status', 'pending')->count(), 
+            // Menghitung Total Buku + Artikel (Post)
+            'posts_count' => Post::count(),
+            
+            // Menghitung Komentar
+            'comments_count' => Comment::count(),
+            
+            // Menghitung Peminjaman Aktif (status 'approved')
+            // Menggunakan model Borrowing
+            'loans_count' => Borrowing::where('status', 'approved')->count(), 
         ]);
     }
 
-    // ==========================================
-    // 2. KELOLA PUSTAKA (BUKU & ARTIKEL)
-    // ==========================================
-    public function posts()
+    // 2. Halaman Kelola Buku (Filter Kategori Buku)
+    public function books()
     {
-        // Ambil data terbaru
-        $posts = Post::orderBy('id', 'desc')->get();
-        return view('dashboard.posts.index', ['posts' => $posts]);
+        $books = Post::whereIn('category', ['Koleksi Baru', 'Resensi', 'Koleksi', 'Koleksi Umum'])
+                     ->latest()
+                     ->get();
+        
+        return view('dashboard.posts.index', [
+            'posts' => $books,
+            'page_title' => '📚 Kelola Katalog Buku'
+        ]);
+    }
+
+    // 3. Halaman Kelola Artikel (Filter Kategori Artikel)
+    public function articles()
+    {
+        $articles = Post::whereIn('category', ['Teknologi', 'Tips Literasi', 'Event', 'Info Layanan', 'Olahraga', 'Informasi'])
+                        ->latest()
+                        ->get();
+        
+        return view('dashboard.posts.index', [
+            'posts' => $articles,
+            'page_title' => '📰 Kelola Artikel Blog'
+        ]);
+    }
+
+    // 4. Halaman Kelola Peminjaman
+    public function borrowings()
+    {
+        // Menggunakan Model Borrowing
+        $borrowings = Borrowing::with(['user', 'book'])->latest()->get();
+
+        return view('dashboard.borrowings.index', [
+            'borrowings' => $borrowings
+        ]);
+    }
+
+    // 5. Update Status Peminjaman
+    public function updateBorrowingStatus(Request $request, $id)
+    {
+        // Menggunakan Model Borrowing
+        $borrowing = Borrowing::findOrFail($id);
+        
+        $borrowing->status = $request->status;
+
+        if ($request->status == 'returned') {
+            $borrowing->return_date = now();
+        }
+
+        $borrowing->save();
+
+        return back()->with('success', 'Status peminjaman berhasil diperbarui!');
+    }
+
+    // 6. Halaman Kelola Komentar
+    public function comments()
+    {
+        $comments = Comment::with('post')->latest()->get();
+        return view('dashboard.comments.index', compact('comments'));
+    }
+
+    public function destroyComment($id)
+    {
+        Comment::findOrFail($id)->delete();
+        return back()->with('success', 'Komentar berhasil dihapus.');
+    }
+
+    // --- FUNGSI CRUD POST (Create, Store, Edit, Update, Delete) ---
+
+    // Fallback route jika ada yang akses /posts
+    public function posts() {
+        return $this->books(); 
     }
 
     public function createPost()
@@ -40,13 +107,12 @@ class DashboardController extends Controller
 
     public function storePost(Request $request)
     {
-        // Validasi input
         $request->validate([
             'title' => 'required',
             'category' => 'required',
             'author' => 'required',
             'body' => 'required',
-            'image' => 'required',
+            'image' => 'required|url'
         ]);
 
         Post::create([
@@ -55,86 +121,35 @@ class DashboardController extends Controller
             'author' => $request->author,
             'body' => $request->body,
             'image' => $request->image,
-            'excerpt' => Str::limit($request->body, 100), 
+            'user_id' => auth()->id() // Admin ID
         ]);
 
-        return redirect()->route('dashboard.posts')->with('success', 'Data berhasil ditambahkan!');
+        if(in_array($request->category, ['Koleksi Baru', 'Resensi', 'Koleksi', 'Koleksi Umum'])) {
+            return redirect()->route('dashboard.books')->with('success', 'Buku berhasil ditambahkan!');
+        }
+        return redirect()->route('dashboard.articles')->with('success', 'Artikel berhasil ditambahkan!');
     }
 
     public function editPost($id)
     {
         $post = Post::findOrFail($id);
-        return view('dashboard.posts.edit', ['post' => $post]);
+        return view('dashboard.posts.edit', compact('post'));
     }
 
     public function updatePost(Request $request, $id)
     {
-        $request->validate([
-            'title' => 'required',
-            'category' => 'required',
-            'author' => 'required',
-            'body' => 'required',
-            'image' => 'required',
-        ]);
-
         $post = Post::findOrFail($id);
-        
-        $post->update([
-            'title' => $request->title,
-            'category' => $request->category,
-            'author' => $request->author,
-            'body' => $request->body,
-            'image' => $request->image,
-            'excerpt' => Str::limit($request->body, 100),
-        ]);
+        $post->update($request->all());
 
-        return redirect()->route('dashboard.posts')->with('success', 'Data berhasil diperbarui!');
+        if(in_array($post->category, ['Koleksi Baru', 'Resensi', 'Koleksi', 'Koleksi Umum'])) {
+            return redirect()->route('dashboard.books')->with('success', 'Data Buku berhasil diupdate!');
+        }
+        return redirect()->route('dashboard.articles')->with('success', 'Data Artikel berhasil diupdate!');
     }
 
     public function destroyPost($id)
     {
-        Post::destroy($id);
-        return back()->with('success', 'Data berhasil dihapus!');
-    }
-
-    // ==========================================
-    // 3. KELOLA KOMENTAR
-    // ==========================================
-    public function comments()
-    {
-        $comments = Comment::orderBy('id', 'desc')->get();
-        return view('dashboard.comments.index', ['comments' => $comments]);
-    }
-
-    public function destroyComment($id)
-    {
-        Comment::destroy($id);
-        return back()->with('success', 'Komentar berhasil dihapus!');
-    }
-
-    // ==========================================
-    // 4. KELOLA PEMINJAMAN
-    // ==========================================
-    public function borrowings()
-    {
-        // Ambil data peminjaman beserta info user dan bukunya
-        $borrowings = Borrowing::with(['user', 'book'])->orderBy('id', 'desc')->get();
-        return view('dashboard.borrowings.index', ['borrowings' => $borrowings]);
-    }
-
-    public function updateBorrowingStatus(Request $request, $id)
-    {
-        $borrowing = Borrowing::findOrFail($id);
-        
-        $data = ['status' => $request->status];
-        
-        // Kalau di-ACC (approved), set tanggal kembali otomatis 7 hari lagi
-        if($request->status == 'approved') {
-            $data['return_date'] = now()->addDays(7);
-        }
-
-        $borrowing->update($data);
-
-        return back()->with('success', 'Status peminjaman berhasil diperbarui!');
+        Post::findOrFail($id)->delete();
+        return back()->with('success', 'Data berhasil dihapus.');
     }
 }

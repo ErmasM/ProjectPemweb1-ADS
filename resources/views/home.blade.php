@@ -10,9 +10,8 @@
         /* --- WARNA DASAR --- */
         body { background-color: #111; color: #eee; font-family: 'Segoe UI', sans-serif; }
         
-        /* --- NAVBAR BARU (WARNA GRADASI) --- */
+        /* --- NAVBAR BARU (SERAGAM DI SEMUA HALAMAN) --- */
         .navbar { 
-            /* Gradasi Biru Gelap ke Hitam Abu - Cocok untuk E-Library */
             background: linear-gradient(90deg, #0f2027, #203a43, #2c5364);
             padding: 15px 0; 
             border-bottom: 1px solid rgba(255,255,255,0.1);
@@ -59,9 +58,11 @@
         .book-card:hover .book-cover { transform: scale(1.05); }
 
         .badge-cat { font-size: 0.7rem; padding: 6px 10px; border-radius: 4px; text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px; }
-        .bg-Teknologi { background-color: #0d6efd; } .bg-Kesehatan { background-color: #198754; } .bg-Bisnis { background-color: #ffc107; color: #000; }
-        .bg-Travel { background-color: #0dcaf0; color: #000; } .bg-Gaya { background-color: #d63384; } .bg-Resensi { background-color: #6610f2; }
-        .bg-Info { background-color: #17a2b8; } .bg-Event { background-color: #fd7e14; }
+        
+        /* Category colors */
+        .bg-Teknologi { background-color: #0d6efd; } .bg-Kesehatan { background-color: #198754; } 
+        .bg-Bisnis { background-color: #ffc107; color: #000; } .bg-Travel { background-color: #0dcaf0; color: #000; }
+        .bg-Gaya { background-color: #d63384; } .bg-Resensi { background-color: #6610f2; }
 
         .carousel-indicators { bottom: 20px; }
         .carousel-indicators button { width: 8px !important; height: 8px !important; border-radius: 50%; background-color: #888; margin: 0 5px; opacity: 0.5; border: none; }
@@ -82,13 +83,38 @@
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
-            <ul class="navbar-nav">
+            <ul class="navbar-nav align-items-center">
               <li class="nav-item"><a class="nav-link {{ Route::is('home') ? 'active' : '' }}" href="{{ route('home') }}">BERANDA</a></li>
               <li class="nav-item"><a class="nav-link {{ Route::is('contact') ? 'active' : '' }}" href="{{ route('contact') }}">KONTAK</a></li>
-              <li class="nav-item"><a class="nav-link {{ Route::is('login') ? 'active' : '' }}" href="{{ route('login') }}">LOGIN</a></li>
+              
+              @auth
+                  {{-- MENU SETELAH LOGIN --}}
+                  @if(Auth::user()->role === 'admin')
+                     <li class="nav-item"><a class="nav-link" href="{{ route('dashboard') }}">DASHBOARD</a></li>
+                  @else
+                     <li class="nav-item"><a class="nav-link" href="{{ route('my.borrowings') }}">BUKU SAYA</a></li>
+                  @endif
+                  
+                  {{-- PEMISAH JARAK AGAR RAPI --}}
+                  <li class="nav-item mx-2 border-start border-secondary" style="height: 20px;"></li>
+
+               
+                  {{-- TOMBOL LOGOUT (ICON POWER) --}}
+                  <li class="nav-item">
+                    <form action="{{ route('logout') }}" method="POST" class="d-inline">
+                        @csrf
+                        <button type="submit" class="nav-link bg-transparent border-0 text-danger" title="Logout" style="cursor: pointer;">
+                            <i class="fa-solid fa-power-off"></i>
+                        </button>
+                    </form>
+                  </li>
+              @else
+                  <li class="nav-item"><a class="nav-link {{ Route::is('login') ? 'active' : '' }}" href="{{ route('login') }}">LOGIN</a></li>
+              @endauth
+
             </ul>
         </div>
-        <div class="d-none d-lg-block" style="width: 200px;"></div> 
+        <div class="d-none d-lg-block" style="width: 50px;"></div> 
       </div>
     </nav>
 

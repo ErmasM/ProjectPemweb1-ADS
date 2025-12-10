@@ -19,6 +19,7 @@
         .nav-link { color: #ccc; font-weight: 700; font-size: 0.85rem; text-transform: uppercase; margin: 0 15px; letter-spacing: 1px; transition: 0.3s; }
         .nav-link:hover, .nav-link.active { color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.5); }
 
+        /* STYLE CONTACT BOX ASLI */
         .contact-box {
             background-color: #1a1a1a; border-radius: 20px; overflow: hidden;
             box-shadow: 0 20px 50px rgba(0,0,0,0.7); border: 1px solid #333; min-height: 600px;
@@ -40,23 +41,49 @@
     <nav class="navbar navbar-expand-lg sticky-top">
       <div class="container">
         <a class="navbar-brand d-flex align-items-center" href="{{ route('home') }}">
-
             <div style="line-height: 1.2;">
                 <span class="d-block fw-bold text-white text-uppercase" style="letter-spacing: 2px; font-size: 1.1rem;">E-Library</span>
             </div>
         </a>
         <button class="navbar-toggler bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"><span class="navbar-toggler-icon"></span></button>
         <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
-            <ul class="navbar-nav">
+            <ul class="navbar-nav align-items-center">
               <li class="nav-item"><a class="nav-link" href="{{ route('home') }}">BERANDA</a></li>
               <li class="nav-item"><a class="nav-link active" href="{{ route('contact') }}">KONTAK</a></li>
-              <li class="nav-item"><a class="nav-link" href="{{ route('login') }}">LOGIN</a></li>
+              
+              {{-- FITUR LOGIKA NAVBAR (Login/User) --}}
+              @guest
+                  <li class="nav-item"><a class="nav-link" href="{{ route('login') }}">LOGIN</a></li>
+              @endguest
+
+              @auth
+                  {{-- Jika Admin ke Dashboard, Jika User ke Buku Saya --}}
+                  @if(Auth::user()->role === 'admin')
+                     <li class="nav-item"><a class="nav-link" href="{{ route('dashboard') }}">DASHBOARD</a></li>
+                  @else
+                     <li class="nav-item"><a class="nav-link" href="{{ route('my.borrowings') }}">BUKU SAYA</a></li>
+                  @endif
+
+                 
+                  
+                  {{-- Tombol Logout --}}
+                  <li class="nav-item">
+                    <form action="{{ route('logout') }}" method="POST" class="d-inline">
+                        @csrf
+                        <button type="submit" class="nav-link bg-transparent border-0 text-danger" title="Logout" style="cursor: pointer;">
+                            <i class="fa-solid fa-power-off"></i>
+                        </button>
+                    </form>
+                  </li>
+              @endauth
+
             </ul>
         </div>
         <div class="d-none d-lg-block" style="width: 200px;"></div>
       </div>
     </nav>
 
+    {{-- KONTEN CONTACT ASLI ANDA (TIDAK DIUBAH) --}}
     <div class="container mt-5 mb-5">
         <div class="row justify-content-center">
             <div class="col-lg-11">

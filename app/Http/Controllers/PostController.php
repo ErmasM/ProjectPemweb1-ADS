@@ -10,20 +10,17 @@ class PostController extends Controller
 {
     public function index()
     {
-        // Ambil data Blog (Kategori Umum)
+        // 1. Ambil data Blog (Artikel/Berita)
         $blogPosts = Post::whereIn('category', ['Teknologi', 'Tips Literasi', 'Event', 'Info Layanan', 'Edukasi'])
                          ->orderBy('id', 'desc')
                          ->get();
 
-        // Ambil data Buku (Kategori Spesifik Buku)
+        // 2. Ambil data Buku (Koleksi)
         $bookCollections = Post::whereIn('category', ['Resensi', 'Koleksi Baru', 'Koleksi'])
                                ->orderBy('id', 'desc')
                                ->get();
 
-        // Slider Utama (Ambil 3 terbaru dari Blog)
         $sliderPosts = $blogPosts->take(3);
-        
-        // Grid Blog (Ambil sisanya)
         $gridBlogPosts = $blogPosts->skip(3);
 
         return view('home', [
@@ -37,17 +34,25 @@ class PostController extends Controller
     {
         $post = Post::findOrFail($id);
         
-        // Cek apakah ini Buku atau Blog (untuk membedakan tampilan)
-        $isBook = in_array($post->category, ['Resensi', 'Koleksi Baru', 'Koleksi']);
+        // Cek apakah ini Buku?
+        $isBook = in_array($post->category, ['Resensi', 'Koleksi Baru', 'Koleksi', 'Koleksi Umum']);
 
         $comments = Comment::where('post_id', $id)->orderBy('id', 'desc')->get();
 
-        // Kalau buku, tampilkan view khusus buku
-        if($isBook) {
+        // JIKA BUKU -> Tampilkan view khusus show_book
+        // Kita kirim datanya sebagai variabel '$book'
+        if($isBook && view()->exists('show_book')) {
             return view('show_book', ['book' => $post, 'comments' => $comments]);
         }
 
-        // Kalau blog biasa, tampilkan view standar
+        // JIKA ARTIKEL -> Tampilkan view standar show
         return view('show', ['post' => $post, 'comments' => $comments]);
+    }
+
+    public function toggleFavorite($id)
+    {
+        $post = Post::findOrFail($id);
+        auth()->user()->favorites()->toggle($post->id);
+        return back(); 
     }
 }

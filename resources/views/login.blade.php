@@ -68,21 +68,50 @@
         </a>
         <button class="navbar-toggler bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"><span class="navbar-toggler-icon"></span></button>
         <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
-            <ul class="navbar-nav">
+            <ul class="navbar-nav align-items-center">
               <li class="nav-item"><a class="nav-link" href="{{ route('home') }}">BERANDA</a></li>
               <li class="nav-item"><a class="nav-link" href="{{ route('contact') }}">KONTAK</a></li>
-              <li class="nav-item"><a class="nav-link active" href="{{ route('login') }}">LOGIN</a></li>
+              
+              {{-- FITUR LOGIKA NAVBAR (Login/User) --}}
+              @guest
+                  <li class="nav-item"><a class="nav-link active" href="{{ route('login') }}">LOGIN</a></li>
+              @endguest
+
+              @auth
+                  {{-- Jika Admin ke Dashboard, Jika User ke Buku Saya --}}
+                  @if(Auth::user()->role === 'admin')
+                     <li class="nav-item"><a class="nav-link" href="{{ route('dashboard') }}">DASHBOARD</a></li>
+                  @else
+                     <li class="nav-item"><a class="nav-link" href="{{ route('my.borrowings') }}">BUKU SAYA</a></li>
+                  @endif
+
+                  {{-- Tampilkan Nama User --}}
+                  <li class="nav-item ms-2"><span class="nav-link text-primary" style="cursor: default;">HALO, {{ strtoupper(Auth::user()->name) }}</span></li>
+                  
+                  {{-- Tombol Logout --}}
+                  <li class="nav-item">
+                    <form action="{{ route('logout') }}" method="POST" class="d-inline">
+                        @csrf
+                        <button type="submit" class="nav-link bg-transparent border-0 text-danger" title="Logout" style="cursor: pointer;">
+                            <i class="fa-solid fa-power-off"></i>
+                        </button>
+                    </form>
+                  </li>
+              @endauth
+
             </ul>
         </div>
         <div class="d-none d-lg-block" style="width: 200px;"></div>
       </div>
     </nav>
 
+    {{-- KONTEN LOGIN ASLI ANDA (TIDAK DIUBAH) --}}
     <div class="login-wrapper">
         <div class="glass-card text-center">
             <div class="mb-4"><i class="fa-solid fa-rocket fa-3x text-primary"></i></div>
             <h3 class="fw-bold mb-4 text-white">LOGIN</h3>
             
+            {{-- Form diarahkan ke route('login.post') atau 'login' sesuai routes/web.php --}}
             <form action="{{ route('login.post') }}" method="POST">
                 @csrf
                 <div class="mb-3 text-start">

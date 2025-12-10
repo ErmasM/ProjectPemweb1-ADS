@@ -18,11 +18,21 @@ class DatabaseSeeder extends Seeder
                 'name' => 'Pustakawan Kelompok 13',
                 'email' => 'admin@gmail.com',
                 'password' => Hash::make('password123'),
+                'role' => 'admin', // --- PERBAIKAN: Set role admin ---
+            ]);
+        }
+
+        // --- TAMBAHAN: AKUN USER BIASA (Untuk Tes Login) ---
+        if (!User::where('email', 'user@gmail.com')->exists()) {
+            User::create([
+                'name' => 'Mahasiswa Teladan',
+                'email' => 'user@gmail.com',
+                'password' => Hash::make('password123'),
+                'role' => 'user', // --- Set role user ---
             ]);
         }
 
         // 2. KONTEN E-LIBRARY (21 Item: Buku, Event, Info)
-        // Kategori yang dipakai: Resensi, Koleksi Baru, Event, Tips Literasi, Info Layanan
         $posts = [
             // --- SLIDE UTAMA (Highlight) ---
             [

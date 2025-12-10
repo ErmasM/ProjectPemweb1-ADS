@@ -17,6 +17,8 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            // Menambahkan kolom role (default 'user', bisa diubah jadi 'admin' manual di database)
+            $table->string('role')->default('user'); 
             $table->rememberToken();
             $table->timestamps();
         });
