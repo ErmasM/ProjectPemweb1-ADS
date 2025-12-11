@@ -1,132 +1,179 @@
 <!doctype html>
-<html lang="id" data-bs-theme="dark">
-<head>
+<html lang="id" data-bs-theme="light">
+  <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Login - Kelompok 13</title>
+    <title>Login - E-Library</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    
     <style>
-        /* --- SETUP AGAR FULL SCREEN --- */
+        :root {
+            --bg-body: #f0f2f5;
+            --bg-pattern: radial-gradient(#d1d5db 1px, transparent 1px);
+            --text-main: #212529;
+            --text-secondary: #6c757d;
+            --card-bg: #ffffff;
+            --card-border: #e9ecef;
+            --navbar-bg: rgba(255, 255, 255, 0.85);
+            --navbar-border: rgba(0, 0, 0, 0.05);
+            --input-bg: #f8f9fa;
+            --input-border: #ced4da;
+            --shadow-soft: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        [data-bs-theme="dark"] {
+            --bg-body: #121212;
+            --bg-pattern: radial-gradient(#333333 1px, transparent 1px);
+            --text-main: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --card-bg: #1e1e1e;
+            --card-border: #333333;
+            --navbar-bg: rgba(18, 18, 18, 0.85);
+            --navbar-border: rgba(255, 255, 255, 0.05);
+            --input-bg: #2a2a2a;
+            --input-border: #444;
+            --shadow-soft: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+        }
+
         body { 
-            background-color: #0f0f0f; 
-            color: #eee; 
-            font-family: 'Segoe UI', sans-serif;
-            /* Trik agar footer/bawahnya mentok */
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            margin: 0;
+            background-color: var(--bg-body); 
+            background-image: var(--bg-pattern); 
+            background-size: 24px 24px;
+            color: var(--text-main); 
+            font-family: 'Segoe UI', sans-serif; 
+            transition: background-color 0.3s, color 0.3s;
+            display: flex; flex-direction: column; min-height: 100vh;
         }
-        
-        /* NAVBAR SERAGAM */
+
+        /* Navbar Styling */
         .navbar { 
-            background: linear-gradient(90deg, #0f2027, #203a43, #2c5364);
+            background: var(--navbar-bg); 
+            backdrop-filter: blur(12px); 
+            border-bottom: 1px solid var(--navbar-border); 
             padding: 15px 0; 
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            flex-shrink: 0; /* Navbar gak boleh mengecil */
         }
-        .nav-link { color: #ccc; font-weight: 700; font-size: 0.85rem; text-transform: uppercase; margin: 0 15px; letter-spacing: 1px; transition: 0.3s; }
-        .nav-link:hover, .nav-link.active { color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.5); }
-
-        /* CONTENT CENTER (BACKGROUND FIX) */
-        .login-wrapper {
-            flex-grow: 1; /* Mengisi sisa ruang kosong sampai bawah */
-            display: flex; align-items: center; justify-content: center;
-            background-image: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2000');
-            background-size: cover; background-position: center;
-            width: 100%;
+        .nav-link { 
+            color: var(--text-secondary); 
+            font-weight: 600; 
+            text-transform: uppercase; 
+            font-size: 0.85rem; 
+            margin: 0 10px; 
+            transition: 0.3s;
         }
-
-        .glass-card {
-            background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px;
-            padding: 40px; width: 100%; max-width: 400px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
-        }
-        .form-control { background-color: rgba(0, 0, 0, 0.5); border: 1px solid #333; color: #fff; padding: 12px; border-radius: 10px; }
-        .form-control:focus { background-color: rgba(0, 0, 0, 0.7); border-color: #0d6efd; color: #fff; }
-        .btn-primary { padding: 12px; border-radius: 10px; font-weight: bold; background: linear-gradient(45deg, #0d6efd, #0099ff); border: none; }
+        .nav-link:hover { color: var(--text-main); }
         
-        .btn-back { 
-            border: 1px solid #444; color: #ccc; border-radius: 10px; width: 100%; 
-            display: block; padding: 10px; text-decoration: none; transition: 0.3s; 
-            background: rgba(0,0,0,0.3);
+        .theme-toggle-btn { 
+            background: transparent; 
+            border: 1px solid var(--text-secondary); 
+            color: var(--text-main); 
+            padding: 5px 10px; 
+            border-radius: 20px; 
+            cursor: pointer; 
+            transition: 0.3s; 
         }
-        .btn-back:hover { background-color: #222; color: #fff; border-color: #fff; }
+        .theme-toggle-btn:hover { background: var(--text-secondary); color: var(--bg-body); }
+
+        /* Login Specific Styling */
+        .login-wrapper { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 20px; }
+        .login-card {
+            background-color: var(--card-bg); 
+            border: 1px solid var(--card-border);
+            border-radius: 16px; 
+            box-shadow: var(--shadow-soft); 
+            width: 100%; max-width: 400px; 
+            padding: 40px;
+        }
+        .form-control {
+            background-color: var(--input-bg); 
+            border: 1px solid var(--input-border); 
+            color: var(--text-main);
+            padding: 12px 15px; 
+            border-radius: 8px;
+        }
+        .form-control:focus {
+            background-color: var(--card-bg); 
+            color: var(--text-main); 
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+        .input-group-text {
+            background-color: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-right: none;
+            color: var(--text-secondary);
+        }
     </style>
-</head>
-<body>
+  </head>
+  <body>
 
     <nav class="navbar navbar-expand-lg sticky-top">
       <div class="container">
         <a class="navbar-brand d-flex align-items-center" href="{{ route('home') }}">
-            <div style="line-height: 1.2;">
-                <span class="d-block fw-bold text-white text-uppercase" style="letter-spacing: 2px; font-size: 1.1rem;">E-Library</span>
-            </div>
+            <i class="fa-solid fa-book-open-reader text-primary me-2 fs-4"></i>
+            <span class="fw-bold text-uppercase" style="letter-spacing: 1px; color: var(--text-main);">E-Library</span>
         </a>
-        <button class="navbar-toggler bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"><span class="navbar-toggler-icon"></span></button>
-        <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
-            <ul class="navbar-nav align-items-center">
-              <li class="nav-item"><a class="nav-link" href="{{ route('home') }}">BERANDA</a></li>
-              <li class="nav-item"><a class="nav-link" href="{{ route('contact') }}">KONTAK</a></li>
-              
-              {{-- FITUR LOGIKA NAVBAR (Login/User) --}}
-              @guest
-                  <li class="nav-item"><a class="nav-link active" href="{{ route('login') }}">LOGIN</a></li>
-              @endguest
-
-              @auth
-                  {{-- Jika Admin ke Dashboard, Jika User ke Buku Saya --}}
-                  @if(Auth::user()->role === 'admin')
-                     <li class="nav-item"><a class="nav-link" href="{{ route('dashboard') }}">DASHBOARD</a></li>
-                  @else
-                     <li class="nav-item"><a class="nav-link" href="{{ route('my.borrowings') }}">BUKU SAYA</a></li>
-                  @endif
-
-                  {{-- Tampilkan Nama User --}}
-                  <li class="nav-item ms-2"><span class="nav-link text-primary" style="cursor: default;">HALO, {{ strtoupper(Auth::user()->name) }}</span></li>
-                  
-                  {{-- Tombol Logout --}}
-                  <li class="nav-item">
-                    <form action="{{ route('logout') }}" method="POST" class="d-inline">
-                        @csrf
-                        <button type="submit" class="nav-link bg-transparent border-0 text-danger" title="Logout" style="cursor: pointer;">
-                            <i class="fa-solid fa-power-off"></i>
-                        </button>
-                    </form>
-                  </li>
-              @endauth
-
-            </ul>
+        
+        <div class="d-flex align-items-center">
+             <a href="{{ route('home') }}" class="nav-link me-3 d-none d-md-block">Beranda</a>
+             <button class="theme-toggle-btn" id="themeToggle"><i class="fa-solid fa-moon" id="themeIcon"></i></button>
         </div>
-        <div class="d-none d-lg-block" style="width: 200px;"></div>
       </div>
     </nav>
 
-    {{-- KONTEN LOGIN ASLI ANDA (TIDAK DIUBAH) --}}
     <div class="login-wrapper">
-        <div class="glass-card text-center">
-            <div class="mb-4"><i class="fa-solid fa-rocket fa-3x text-primary"></i></div>
-            <h3 class="fw-bold mb-4 text-white">LOGIN</h3>
-            
-            {{-- Form diarahkan ke route('login.post') atau 'login' sesuai routes/web.php --}}
+        <div class="login-card">
+            <div class="text-center mb-4">
+                <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                    <i class="fa-solid fa-user-lock text-primary fs-3"></i>
+                </div>
+                <h4 class="fw-bold mb-1">Selamat Datang</h4>
+                <p class="text-secondary small">Masuk untuk mengakses perpustakaan.</p>
+            </div>
+
+            @if($errors->any())
+                <div class="alert alert-danger py-2 text-center small rounded-3 mb-3">
+                    {{ $errors->first() }}
+                </div>
+            @endif
+
             <form action="{{ route('login.post') }}" method="POST">
                 @csrf
-                <div class="mb-3 text-start">
-                    <label class="small text-secondary mb-1">Email</label>
-                    <input type="email" name="email" class="form-control" placeholder="admin@gmail.com" required>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-secondary" style="font-size: 0.75rem;">EMAIL</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fa-solid fa-envelope"></i></span>
+                        <input type="email" name="email" class="form-control border-start-0 ps-1" placeholder="nama@email.com" required>
+                    </div>
                 </div>
-                <div class="mb-4 text-start">
-                    <label class="small text-secondary mb-1">Password</label>
-                    <input type="password" name="password" class="form-control" placeholder="password123" required>
+                <div class="mb-4">
+                    <label class="form-label small fw-bold text-secondary" style="font-size: 0.75rem;">PASSWORD</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fa-solid fa-key"></i></span>
+                        <input type="password" name="password" class="form-control border-start-0 ps-1" placeholder="******" required>
+                    </div>
                 </div>
-                <button type="submit" class="btn btn-primary w-100 mb-3">MASUK</button>
-                <a href="{{ route('home') }}" class="btn-back small"><i class="fa-solid fa-arrow-left me-1"></i> Kembali ke Beranda</a>
+                <button type="submit" class="btn btn-primary w-100 py-2 fw-bold rounded-pill mb-3">MASUK</button>
+                <div class="text-center">
+                    <a href="{{ route('home') }}" class="text-secondary text-decoration-none small">Kembali ke Beranda</a>
+                </div>
             </form>
         </div>
     </div>
 
-</body>
+    <script>
+        const storedTheme = localStorage.getItem('theme');
+        const getPreferredTheme = () => storedTheme ? storedTheme : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        const setTheme = function (theme) {
+            document.documentElement.setAttribute('data-bs-theme', theme);
+            const toggleBtn = document.getElementById('themeIcon');
+            if (theme === 'dark') { toggleBtn.classList.remove('fa-moon'); toggleBtn.classList.add('fa-sun'); } 
+            else { toggleBtn.classList.remove('fa-sun'); toggleBtn.classList.add('fa-moon'); }
+        };
+        setTheme(getPreferredTheme());
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            const newTheme = document.documentElement.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
+            setTheme(newTheme); localStorage.setItem('theme', newTheme);
+        });
+    </script>
+  </body>
 </html>

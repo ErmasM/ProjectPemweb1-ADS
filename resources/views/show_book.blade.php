@@ -7,28 +7,40 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
-        body { background-color: #0f0f0f; color: #eee; font-family: 'Segoe UI', sans-serif; }
-        .navbar { background-color: #111; padding: 15px 0; border-bottom: 1px solid #222; }
-        
-        .book-cover-detail { 
-            width: 100%; border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); border: 1px solid #333;
+        /* VARIABLES */
+        :root {
+            --bg-body: #f0f2f5; --bg-pattern: radial-gradient(#e5e7eb 1px, transparent 1px);
+            --text-main: #212529; --text-secondary: #6c757d;
+            --card-bg: #ffffff; --card-border: #e9ecef;
+            --input-bg: #f8f9fa; --input-border: #ced4da;
+            --shadow-soft: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
-        .info-box { background: #1a1a1a; padding: 30px; border-radius: 15px; border: 1px solid #333; }
+        [data-bs-theme="dark"] {
+            --bg-body: #121212; --bg-pattern: radial-gradient(#2a2a2a 1px, transparent 1px);
+            --text-main: #e0e0e0; --text-secondary: #b0b0b0;
+            --card-bg: #1e1e1e; --card-border: #333333;
+            --input-bg: #2a2a2a; --input-border: #444;
+            --shadow-soft: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+        }
+
+        body { background-color: var(--bg-body); background-image: var(--bg-pattern); background-size: 20px 20px; color: var(--text-main); font-family: 'Segoe UI', sans-serif; transition: 0.3s; }
         
-        .btn-back { text-decoration: none; color: #aaa; font-weight: 600; margin-bottom: 20px; display: inline-block; }
-        .btn-back:hover { color: #fff; }
+        .book-cover-detail { width: 100%; border-radius: 15px; box-shadow: var(--shadow-soft); border: 1px solid var(--card-border); }
+        .info-box { background: var(--card-bg); padding: 30px; border-radius: 15px; border: 1px solid var(--card-border); box-shadow: var(--shadow-soft); }
+        
+        .btn-back { text-decoration: none; color: var(--text-secondary); font-weight: 600; margin-bottom: 20px; display: inline-block; }
+        .btn-back:hover { color: var(--text-main); }
         
         .status-badge { background: #198754; color: #fff; padding: 5px 15px; border-radius: 20px; font-size: 0.9rem; }
-
-        /* Style tambahan untuk komentar agar sama rapinya */
-        .avatar-comment {
-            width: 40px; height: 40px;
-            background: linear-gradient(135deg, #666, #333);
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: bold; color: #fff; flex-shrink: 0;
-        }
+        .avatar-comment { width: 40px; height: 40px; background: linear-gradient(135deg, #666, #333); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #fff; flex-shrink: 0; }
         .btn-delete { background:none; border:none; color:#dc3545; font-size:0.8rem; padding:0; margin-left:10px; text-decoration:underline; }
+
+        .footer-toggle-btn { background: transparent; border: 1px solid var(--text-secondary); color: var(--text-secondary); padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; cursor: pointer; transition: 0.3s; margin-left: 15px; }
+        .footer-toggle-btn:hover { background: var(--text-secondary); color: var(--bg-body); }
+        
+        .form-control { background-color: var(--input-bg); border: 1px solid var(--input-border); color: var(--text-main); }
+        .form-control:focus { background-color: var(--card-bg); border-color: #0d6efd; color: var(--text-main); box-shadow: none; }
+
     </style>
   </head>
   <body>
@@ -37,12 +49,12 @@
         <a href="{{ route('home') }}" class="btn-back"><i class="fa-solid fa-arrow-left me-2"></i> Kembali ke Katalog</a>
 
         <div class="row">
-            {{-- KOLOM KIRI: COVER BUKU --}}
+            {{-- COVER BUKU --}}
             <div class="col-md-4 mb-4">
                 <img src="{{ $book->image }}" class="book-cover-detail">
             </div>
 
-            {{-- KOLOM KANAN: INFO DETAIL --}}
+            {{-- INFO DETAIL --}}
             <div class="col-md-8">
                 <div class="info-box">
                     <div class="d-flex justify-content-between align-items-start mb-3">
@@ -50,100 +62,95 @@
                         <span class="status-badge"><i class="fa-solid fa-check-circle me-1"></i> Tersedia</span>
                     </div>
 
-                    <h1 class="fw-bold display-5 mb-2">{{ $book->title }}</h1>
-                    <h5 class="text-secondary mb-4">Oleh: <span class="text-white">{{ $book->author }}</span></h5>
+                    <h1 class="fw-bold display-5 mb-2" style="color: var(--text-main);">{{ $book->title }}</h1>
+                    <h5 style="color: var(--text-secondary);">Oleh: <span style="color: var(--text-main);">{{ $book->author }}</span></h5>
+                    <hr style="border-color: var(--card-border);">
 
-                    <hr class="border-secondary">
-
-                    <h5 class="fw-bold mt-4 mb-3">Sinopsis Buku</h5>
-                    <p class="text-secondary" style="line-height: 1.8;">
-                        {!! nl2br(e($book->body)) !!}
-                    </p>
+                    <h5 class="fw-bold mt-4 mb-3" style="color: var(--text-main);">Sinopsis Buku</h5>
+                    <p style="color: var(--text-secondary); line-height: 1.8;">{!! nl2br(e($book->body)) !!}</p>
 
                    <div class="mt-5">
-                       {{-- LOGIKA TOMBOL PINJAM & LOVE --}}
                        @auth
-                           {{-- Hapus pengecekan Admin biar kamu bisa tes --}}
-                           
                            <div class="d-flex gap-2">
-                               {{-- 1. TOMBOL PINJAM (DIPERBAIKI) --}}
                                <form action="{{ route('borrow.store', $book->id) }}" method="POST" class="flex-grow-1">
-                                   @csrf
-                                   <input type="hidden" name="post_id" value="{{ $book->id }}">
+                                   @csrf <input type="hidden" name="post_id" value="{{ $book->id }}">
                                    <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold">PINJAM BUKU INI</button>
                                </form>
-
-                               {{-- 2. TOMBOL LOVE (BARU) --}}
                                <form action="{{ route('post.favorite', $book->id) }}" method="POST">
                                    @csrf
-                                   <button class="btn btn-lg px-4" style="background-color: #2a2a2a; border: 1px solid #444;" title="Favoritkan">
-                                       @if(Auth::user()->favorites->contains($book->id))
-                                           <i class="fa-solid fa-heart text-danger fs-4"></i>
-                                       @else
-                                           <i class="fa-regular fa-heart text-white fs-4"></i>
-                                       @endif
+                                   <button class="btn btn-lg px-4" style="background-color: var(--input-bg); border: 1px solid var(--input-border); color: var(--text-main);" title="Favoritkan">
+                                       @if(Auth::user()->favorites->contains($book->id)) <i class="fa-solid fa-heart text-danger fs-4"></i> @else <i class="fa-regular fa-heart fs-4"></i> @endif
                                    </button>
                                </form>
                            </div>
-
                        @else
                            <a href="{{ route('login') }}" class="btn btn-warning btn-lg w-100 fw-bold">LOGIN UNTUK PINJAM</a>
                        @endauth
                     </div>
 
-                {{-- KOMENTAR / ULASAN --}}
+                {{-- ULASAN --}}
                 <div class="mt-5">
-                    <h4 class="fw-bold mb-4">Ulasan Pembaca ({{ count($comments) }})</h4>
+                    <h4 class="fw-bold mb-4" style="color: var(--text-main);">Ulasan Pembaca ({{ count($comments) }})</h4>
                     
                     @auth
                     <form action="{{ route('comments.store') }}" method="POST" class="mb-4">
-                        @csrf
-                        {{-- Perhatikan: Pakai $book->id --}}
-                        <input type="hidden" name="post_id" value="{{ $book->id }}">
-                        
+                        @csrf <input type="hidden" name="post_id" value="{{ $book->id }}">
                         <div class="row g-2">
                             <div class="col-md-4">
-                                {{-- Nama Otomatis --}}
-                                <input type="text" name="name" class="form-control bg-dark text-white border-secondary" value="{{ Auth::user()->name }}" readonly>
+                                <input type="text" name="name" class="form-control" value="{{ Auth::user()->name }}" readonly style="opacity:0.7">
                             </div>
                             <div class="col-md-6">
-                                <input type="text" name="body" class="form-control bg-dark text-white border-secondary" placeholder="Tulis ulasan..." required autocomplete="off">
+                                <input type="text" name="body" class="form-control" placeholder="Tulis ulasan..." required>
                             </div>
-                            <div class="col-md-2">
-                                <button class="btn btn-primary w-100">Kirim</button>
-                            </div>
+                            <div class="col-md-2"><button class="btn btn-primary w-100">Kirim</button></div>
                         </div>
                     </form>
                     @endauth
 
                     @foreach($comments as $comment)
-                    <div class="d-flex gap-3 mb-3 border-bottom border-secondary pb-3">
-                        <div class="avatar-comment">
-                            {{ substr($comment->name ?? 'A', 0, 1) }}
-                        </div>
+                    <div class="d-flex gap-3 mb-3 border-bottom pb-3" style="border-color: var(--card-border) !important;">
+                        <div class="avatar-comment">{{ substr($comment->name ?? 'A', 0, 1) }}</div>
                         <div class="w-100">
                             <div class="d-flex justify-content-between">
-                                <h6 class="fw-bold mb-0 text-white">{{ $comment->name }}</h6>
-                                <small class="text-secondary">{{ \Carbon\Carbon::parse($comment->created_at)->diffForHumans() }}</small>
+                                <h6 class="fw-bold mb-0" style="color: var(--text-main);">{{ $comment->name }}</h6>
+                                <small style="color: var(--text-secondary);">{{ \Carbon\Carbon::parse($comment->created_at)->diffForHumans() }}</small>
                             </div>
-                            <p class="text-secondary mb-0 small">{{ $comment->body }}</p>
-
-                            @auth
-                                @if(Auth::user()->role === 'admin')
-                                <form action="{{ route('comments.destroy', $comment->id) }}" method="POST" onsubmit="return confirm('Hapus?');" class="d-inline">
-                                    @csrf @method('DELETE')
-                                    <button class="btn-delete">Hapus</button>
+                            <p class="mb-0 small" style="color: var(--text-secondary);">{{ $comment->body }}</p>
+                            @auth @if(Auth::user()->role === 'admin')
+                                <form action="{{ route('comments.destroy', $comment->id) }}" method="POST" class="d-inline">
+                                    @csrf @method('DELETE') <button class="btn-delete">Hapus</button>
                                 </form>
-                                @endif
-                            @endauth
+                            @endif @endauth
                         </div>
                     </div>
                     @endforeach
                 </div>
-
             </div>
         </div>
     </div>
+    
+    {{-- FOOTER SIMPLE DENGAN TOGGLE --}}
+    <footer class="text-center py-4 border-top mt-5" style="background-color: var(--card-bg); border-color: var(--card-border) !important;">
+        <div class="container d-flex justify-content-center align-items-center">
+            <small style="color: var(--text-secondary);">&copy; {{ date('Y') }} E-Library.</small>
+            <button class="footer-toggle-btn" id="themeToggle"><i class="fa-solid fa-moon me-1" id="themeIcon"></i> Mode</button>
+        </div>
+    </footer>
 
+    <script>
+        const storedTheme = localStorage.getItem('theme');
+        const getPreferredTheme = () => storedTheme ? storedTheme : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        const setTheme = function (theme) {
+            document.documentElement.setAttribute('data-bs-theme', theme);
+            const toggleBtn = document.getElementById('themeIcon');
+            if (theme === 'dark') { toggleBtn.classList.remove('fa-moon'); toggleBtn.classList.add('fa-sun'); } 
+            else { toggleBtn.classList.remove('fa-sun'); toggleBtn.classList.add('fa-moon'); }
+        };
+        setTheme(getPreferredTheme());
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            const newTheme = document.documentElement.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
+            setTheme(newTheme); localStorage.setItem('theme', newTheme);
+        });
+    </script>
   </body>
 </html>

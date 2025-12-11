@@ -3,88 +3,72 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-// IMPORT MODEL YANG BENAR SESUAI GAMBAR KAMU
+use Illuminate\Support\Str; 
 use App\Models\Post;       
 use App\Models\Comment;    
-use App\Models\Borrowing;  // Perhatikan: Pakai 'Borrowing', bukan 'Borrow'
+use App\Models\Borrowing;  
 
 class DashboardController extends Controller
 {
-    // 1. Halaman Dashboard Utama
+    // --- DAFTAR KATEGORI AGAR KONSISTEN ---
+    // Kita simpan daftar kategori di sini biar tidak perlu ketik ulang terus
+    private $kategoriBuku = [
+        'Koleksi Baru', 'Resensi', 'Koleksi', 'Koleksi Umum', 
+        'Novel', 'Sejarah', 'Biografi', 'Komik', 'Ensiklopedia', 
+        'Kamus', 'Sastra', 'Psikologi', 'Agama', 'Buku Pelajaran', 'Bisnis', 'Fiksi'
+    ];
+
+    private $kategoriArtikel = [
+        'Teknologi', 'Tips Literasi', 'Event', 'Info Layanan', 
+        'Olahraga', 'Informasi', 'Berita', 'Opini'
+    ];
+
     public function index()
     {
         return view('dashboard.index', [
-            // Menghitung Total Buku + Artikel (Post)
             'posts_count' => Post::count(),
-            
-            // Menghitung Komentar
             'comments_count' => Comment::count(),
-            
-            // Menghitung Peminjaman Aktif (status 'approved')
-            // Menggunakan model Borrowing
             'loans_count' => Borrowing::where('status', 'approved')->count(), 
         ]);
     }
 
-    // 2. Halaman Kelola Buku (Filter Kategori Buku)
+    // --- HALAMAN DAFTAR (READ) ---
+
     public function books()
     {
-        $books = Post::whereIn('category', ['Koleksi Baru', 'Resensi', 'Koleksi', 'Koleksi Umum'])
-                     ->latest()
-                     ->get();
-        
-        return view('dashboard.posts.index', [
-            'posts' => $books,
-            'page_title' => '📚 Kelola Katalog Buku'
-        ]);
+        // PERBAIKAN: Masukkan $this->kategoriBuku agar Novel dll ikut muncul
+        $books = Post::whereIn('category', $this->kategoriBuku)->latest()->get();
+        return view('dashboard.posts.index', ['posts' => $books, 'page_title' => '📚 Kelola Katalog Buku']);
     }
 
-    // 3. Halaman Kelola Artikel (Filter Kategori Artikel)
     public function articles()
     {
-        $articles = Post::whereIn('category', ['Teknologi', 'Tips Literasi', 'Event', 'Info Layanan', 'Olahraga', 'Informasi'])
-                        ->latest()
-                        ->get();
-        
-        return view('dashboard.posts.index', [
-            'posts' => $articles,
-            'page_title' => '📰 Kelola Artikel Blog'
-        ]);
+        // PERBAIKAN: Gunakan daftar kategori artikel yang lengkap
+        $articles = Post::whereIn('category', $this->kategoriArtikel)->latest()->get();
+        return view('dashboard.posts.index', ['posts' => $articles, 'page_title' => '📰 Kelola Artikel Blog']);
     }
 
-    // 4. Halaman Kelola Peminjaman
     public function borrowings()
     {
-        // Menggunakan Model Borrowing
         $borrowings = Borrowing::with(['user', 'book'])->latest()->get();
-
-        return view('dashboard.borrowings.index', [
-            'borrowings' => $borrowings
-        ]);
+        return view('dashboard.borrowings.index', ['borrowings' => $borrowings]);
     }
 
-    // 5. Update Status Peminjaman
-    public function updateBorrowingStatus(Request $request, $id)
-    {
-        // Menggunakan Model Borrowing
-        $borrowing = Borrowing::findOrFail($id);
-        
-        $borrowing->status = $request->status;
-
-        if ($request->status == 'returned') {
-            $borrowing->return_date = now();
-        }
-
-        $borrowing->save();
-
-        return back()->with('success', 'Status peminjaman berhasil diperbarui!');
-    }
-
-    // 6. Halaman Kelola Komentar
     public function comments()
     {
         $comments = Comment::with('post')->latest()->get();
         return view('dashboard.comments.index', compact('comments'));
+    }
+
+    // --- UPDATE STATUS & DELETE ---
+
+    public function updateBorrowingStatus(Request $request, $id)
+    {
+        $borrowing = Borrowing::findOrFail($id);
+        $borrowing->status = $request->status;
+        if ($request->status == 'returned') { $borrowing->return_date = now(); }
+        $borrowing->save();
+        return back()->with('success', 'Status peminjaman berhasil diperbarui!');
     }
 
     public function destroyComment($id)
@@ -93,17 +77,11 @@ class DashboardController extends Controller
         return back()->with('success', 'Komentar berhasil dihapus.');
     }
 
-    // --- FUNGSI CRUD POST (Create, Store, Edit, Update, Delete) ---
+    // --- CRUD POST (CREATE, UPDATE, DELETE) ---
 
-    // Fallback route jika ada yang akses /posts
-    public function posts() {
-        return $this->books(); 
-    }
+    public function posts() { return $this->books(); }
 
-    public function createPost()
-    {
-        return view('dashboard.posts.create');
-    }
+    public function createPost() { return view('dashboard.posts.create'); }
 
     public function storePost(Request $request)
     {
@@ -121,12 +99,17 @@ class DashboardController extends Controller
             'author' => $request->author,
             'body' => $request->body,
             'image' => $request->image,
-            'user_id' => auth()->id() // Admin ID
+            'excerpt' => Str::limit(strip_tags($request->body), 150),
+            // 'user_id' => auth()->id() 
         ]);
 
-        if(in_array($request->category, ['Koleksi Baru', 'Resensi', 'Koleksi', 'Koleksi Umum'])) {
+        // PERBAIKAN LOGIKA REDIRECT
+        // Cek apakah kategori yang dipilih termasuk dalam daftar BUKU
+        if(in_array($request->category, $this->kategoriBuku)) {
             return redirect()->route('dashboard.books')->with('success', 'Buku berhasil ditambahkan!');
         }
+        
+        // Jika tidak ada di daftar buku, pasti masuk ke Artikel
         return redirect()->route('dashboard.articles')->with('success', 'Artikel berhasil ditambahkan!');
     }
 
@@ -139,9 +122,17 @@ class DashboardController extends Controller
     public function updatePost(Request $request, $id)
     {
         $post = Post::findOrFail($id);
-        $post->update($request->all());
+        $post->update([
+            'title' => $request->title,
+            'category' => $request->category,
+            'author' => $request->author,
+            'body' => $request->body,
+            'image' => $request->image,
+            'excerpt' => Str::limit(strip_tags($request->body), 150),
+        ]);
 
-        if(in_array($post->category, ['Koleksi Baru', 'Resensi', 'Koleksi', 'Koleksi Umum'])) {
+        // PERBAIKAN LOGIKA REDIRECT SAAT UPDATE
+        if(in_array($post->category, $this->kategoriBuku)) {
             return redirect()->route('dashboard.books')->with('success', 'Data Buku berhasil diupdate!');
         }
         return redirect()->route('dashboard.articles')->with('success', 'Data Artikel berhasil diupdate!');
